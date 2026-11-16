@@ -8,6 +8,9 @@ $ErrorActionPreference = 'Stop'
 $netframework_tfm = 'net48'
 $net_tfm = 'net10.0-windows'
 $configuration = 'Release'
+# Version of System.Collections.Immutable used by the ILSpy submodule (its Directory.Packages.props
+# isn't part of the submodule, so the property has to be passed in)
+$sc_immutable_version = '10.0.15'
 $net_baseoutput = "dnSpy\dnSpy\bin\$configuration"
 $apphostpatcher_dir = "Build\AppHostPatcher"
 
@@ -21,11 +24,11 @@ function Build-NetFramework {
 	$outdir = "$net_baseoutput\$netframework_tfm"
 
 	if ($NoMsbuild) {
-		dotnet build -v:m -c $configuration
+		dotnet build -v:m -c $configuration -p:SCImmutableVersion=$sc_immutable_version
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 	else {
-		msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration
+		msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration -p:SCImmutableVersion=$sc_immutable_version
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 
@@ -46,11 +49,11 @@ function Build-Net {
     $outdir = "$net_baseoutput\$net_tfm"
 
     if ($NoMsbuild) {
-        dotnet build -v:m -c $configuration -f $net_tfm
+        dotnet build -v:m -c $configuration -p:SCImmutableVersion=$sc_immutable_version -f $net_tfm
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     }
     else {
-        msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration -p:TargetFramework=$net_tfm
+        msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration -p:SCImmutableVersion=$sc_immutable_version -p:TargetFramework=$net_tfm
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     }
 
@@ -77,11 +80,11 @@ function Build-SelfContainedNet {
 	$publishDir = "$outdir\publish"
 
 	if ($NoMsbuild) {
-		dotnet publish -v:m -c $configuration -f $net_tfm -r $rid --self-contained
+		dotnet publish -v:m -c $configuration -f $net_tfm -r $rid --self-contained -p:SCImmutableVersion=$sc_immutable_version
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 	else {
-		msbuild -v:m -m -restore -t:Publish -p:Configuration=$configuration -p:TargetFramework=$net_tfm -p:RuntimeIdentifier=$rid -p:SelfContained=True
+		msbuild -v:m -m -restore -t:Publish -p:Configuration=$configuration -p:TargetFramework=$net_tfm -p:RuntimeIdentifier=$rid -p:SelfContained=True -p:SCImmutableVersion=$sc_immutable_version
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 
@@ -108,11 +111,11 @@ $buildNetX64        = $buildtfm -eq 'all' -or $buildtfm -eq 'net-x64'
 if ($buildNetX86 -or $buildNetX64 -or $buildNet) {
     Write-Host 'Building AppHostPatcher tool'
 	if ($NoMsbuild) {
-		dotnet build -v:m -c $configuration -f $netframework_tfm $apphostpatcher_dir\AppHostPatcher.csproj
+		dotnet build -v:m -c $configuration -p:SCImmutableVersion=$sc_immutable_version -f $netframework_tfm $apphostpatcher_dir\AppHostPatcher.csproj
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 	else {
-		msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration -p:TargetFramework=$netframework_tfm $apphostpatcher_dir\AppHostPatcher.csproj
+		msbuild -v:m -m -restore -t:Build -p:Configuration=$configuration -p:SCImmutableVersion=$sc_immutable_version -p:TargetFramework=$netframework_tfm $apphostpatcher_dir\AppHostPatcher.csproj
 		if ($LASTEXITCODE) { exit $LASTEXITCODE }
 	}
 }
